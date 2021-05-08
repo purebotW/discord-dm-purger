@@ -1,4 +1,4 @@
-import discord, os
+import discord, os, contextlib
 
 class Purger(discord.Client):
     def __init__(self, **kwargs):
@@ -9,16 +9,17 @@ class Purger(discord.Client):
     
     async def on_connect(self):
         print('Now purging')
-        if not self.user.friends:
-            print('No friends to purge.')
-            return
-        for friend in self.user.friends:
-            print(f'Purging DMS with {str(friend)}')
-            if not friend.dm_channel:
-                continue
-            async for message in friend.dm_channel.history(limit=100).filter(self.check):
-                await message.delete()
-        print('Finished purging.')
+        with contextlib.suppress('discord.errors.Forbidden'):
+            if not self.user.friends:
+                print('No friends to purge.')
+                return
+            for friend in self.user.friends:
+                print(f'Purging DMS with {str(friend)}')
+                if not friend.dm_channel:
+                    continue
+                async for message in friend.dm_channel.history(limit=100).filter(self.check):
+                    await message.delete()
+            print('Finished purging.')
         
     def main(self):
         os.system('cls')
